@@ -13,6 +13,8 @@ export default function Dashboard() {
   const [widthMm, setWidthMm] = useState<number | null>(null);
   const [lengthMm, setLengthMm] = useState<number | null>(null);
   const [statusText, setStatusText] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -45,11 +47,24 @@ export default function Dashboard() {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
     setCapturedDataUrl(dataUrl);
-    const result = await analyzeImageFromDataUrl(dataUrl);
-    setHeightMm(result.heightMm);
-    setWidthMm(result.widthMm);
-    setLengthMm(result.lengthMm);
-    setStatusText(result.status);
+    setIsLoading(true);
+    setErrorMsg(null);
+    try {
+      const result = await analyzeImageFromDataUrl(dataUrl);
+      setHeightMm(result.heightMm);
+      setWidthMm(result.widthMm);
+      setLengthMm(result.lengthMm);
+      setStatusText(result.status);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Falha ao analisar imagem.';
+      setErrorMsg(msg);
+      setHeightMm(null);
+      setWidthMm(null);
+      setLengthMm(null);
+      setStatusText(null);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -104,16 +119,26 @@ export default function Dashboard() {
             </div>
 
             <div className="space-y-2 text-gray-700">
-              <p className="text-base"><span className="font-semibold">Altura:</span> {heightMm ?? '--'}mm</p>
-              <p className="text-base"><span className="font-semibold">Largura:</span> {widthMm ?? '--'}mm</p>
-              <p className="text-base"><span className="font-semibold">Comprimento:</span> {lengthMm ?? '--'}mm</p>
+              {isLoading ? (
+                <p className="text-sm text-gray-500">Analisando imagem com IA...</p>
+              ) : (
+                <>
+                  <p className="text-base"><span className="font-semibold">Altura:</span> {heightMm ?? '--'}mm</p>
+                  <p className="text-base"><span className="font-semibold">Largura:</span> {widthMm ?? '--'}mm</p>
+                  <p className="text-base"><span className="font-semibold">Comprimento:</span> {lengthMm ?? '--'}mm</p>
+                </>
+              )}
+              {errorMsg && (
+                <p className="text-sm text-red-600">{errorMsg}</p>
+              )}
             </div>
           </div>
 
           <div className="flex gap-4 pt-2">
             <button
               onClick={handleCapture}
-              className="flex-1 px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-xl transition-all border-2 border-gray-200 hover:border-gray-300"
+              disabled={isLoading}
+              className="flex-1 px-6 py-3 bg-white hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed text-gray-700 font-semibold rounded-xl transition-all border-2 border-gray-200 hover:border-gray-300"
             >
               Capturar
             </button>
