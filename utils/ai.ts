@@ -9,10 +9,20 @@ export interface AnalysisResult {
 }
 
 // Placeholder AI analysis. Replace this with a real model integration later.
+function resolveApiKey(): string | null {
+  const fromEnv = (import.meta as any)?.env?.VITE_GEMINI_API_KEY as string | undefined;
+  if (fromEnv && String(fromEnv).trim().length > 0) return fromEnv;
+  try {
+    const fromStorage = localStorage.getItem('clinmind.geminiKey');
+    if (fromStorage && fromStorage.trim().length > 0) return fromStorage.trim();
+  } catch {}
+  return null;
+}
+
 export async function analyzeImageFromDataUrl(dataUrl: string): Promise<AnalysisResult> {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
+  const apiKey = resolveApiKey();
   if (!apiKey) {
-    throw new Error('VITE_GEMINI_API_KEY não configurada. Adicione ao arquivo .env e reinicie.');
+    throw new Error('Chave do Gemini ausente. Informe a chave no aplicativo para continuar.');
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
