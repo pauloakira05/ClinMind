@@ -25,11 +25,16 @@ export default function ManualEntry() {
     }
     const statusText = computeStatus(heightMm, widthMm, lengthMm);
     setValidation(statusText === 'Padrão OK' ? 'ok' : statusText === 'Atenção' ? 'warning' : 'error');
+
+    const statusOverride =
+      validation === 'ok' ? 'Padrão OK' : validation === 'warning' ? 'Atenção' : 'Fora do Padrão';
+
     const saved = saveMeasurement({
       sampleId: sampleId,
       heightMm,
       widthMm,
       lengthMm,
+      statusOverride,
     });
     try {
       // eslint-disable-next-line no-alert

@@ -1,0 +1,1 @@
+{"root":["./vite-env.d.ts","./vite.config.ts","./utils/ai.ts","./utils/measurements.ts","./app.tsx","./main.tsx","./pages/dashboard.tsx","./pages/history.tsx","./pages/login.tsx","./pages/mainmenu.tsx","./pages/manualentry.tsx"],"version":"5.9.2"}

@@ -65,9 +65,10 @@ export function saveMeasurement(partial: {
   heightMm: number;
   widthMm: number;
   lengthMm: number;
+  statusOverride?: StatusText;
 }): StoredMeasurement {
   const sampleId = generateSampleId(partial.sampleId ?? null);
-  const status = computeStatus(partial.heightMm, partial.widthMm, partial.lengthMm);
+  const status = partial.statusOverride ?? computeStatus(partial.heightMm, partial.widthMm, partial.lengthMm);
   const createdAt = new Date().toISOString();
   const measurement: StoredMeasurement = {
     sampleId,
