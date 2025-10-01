@@ -8,6 +8,7 @@ export default function History() {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState<string>('');
   const [measurements, setMeasurements] = useState<StoredMeasurement[]>([]);
+  const [selected, setSelected] = useState<StoredMeasurement | null>(null);
 
   useEffect(() => {
     setMeasurements(getMeasurements());
@@ -98,6 +99,7 @@ export default function History() {
   };
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-teal-50 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl">
         <div className="bg-white rounded-3xl shadow-xl p-8 space-y-6">
@@ -137,7 +139,7 @@ export default function History() {
                       : 'bg-red-500'
                   }`}
                 ></div>
-                <div className="flex-1 flex items-center justify-between">
+                <div className="flex-1 flex items-center justify-between" onClick={() => setSelected(measurement)}>
                   <span className="font-semibold text-gray-900 text-lg">ID: {measurement.sampleId}</span>
                   <span className="text-gray-500">{formatDateTimePtBR(measurement.createdAt).full}</span>
                 </div>
@@ -187,5 +189,24 @@ export default function History() {
         </div>
       </div>
     </div>
+    {selected && (
+      <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4" onClick={() => setSelected(null)}>
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold text-gray-900">Detalhes da Medição</h3>
+            <button onClick={() => setSelected(null)} className="text-gray-500 hover:text-gray-700">Fechar</button>
+          </div>
+          <div className="space-y-2 text-gray-800">
+            <p><span className="font-semibold">ID:</span> {selected.sampleId}</p>
+            <p><span className="font-semibold">Data/Hora:</span> {formatDateTimePtBR(selected.createdAt).full}</p>
+            <p><span className="font-semibold">Altura (mm):</span> {selected.heightMm}</p>
+            <p><span className="font-semibold">Largura (mm):</span> {selected.widthMm}</p>
+            <p><span className="font-semibold">Comprimento (mm):</span> {selected.lengthMm}</p>
+            <p><span className="font-semibold">Status:</span> {selected.status}</p>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

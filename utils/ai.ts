@@ -19,23 +19,39 @@ Exemplo de resposta: {"heightMm": 10.2, "widthMm": 25.1, "lengthMm": 31.0}`;
   const resp = await fetch('/.netlify/functions/generate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ imageBase64: base64, prompt }),
+    // Adequar ao contrato esperado pela Function publicada
+    body: JSON.stringify({ base64Image: base64, prompt: 'Calcule altura, largura e comprimento em mm.' }),
   });
 
-  let parsed: { heightMm: number | null; widthMm: number | null; lengthMm: number | null } | null = null;
+  let parsed: any = null;
   try {
     parsed = await resp.json();
   } catch {
     throw new Error('Falha ao processar a resposta do servidor.');
   }
   if (!resp.ok) {
-    const msg = (parsed as any)?.error || 'Falha ao consultar a IA.';
+    // Mapear mensagens amigáveis por status
+    if (resp.status === 400 || resp.status === 422) {
+      throw new Error('Não foi possível analisar a imagem. Tente novamente ou tire outra foto.');
+    }
+    if (resp.status === 413) {
+      throw new Error('Imagem muito grande para enviar. Reduza a resolução e tente novamente.');
+    }
+    if (resp.status === 500) {
+      const msg = typeof parsed?.error === 'string' ? parsed.error : '';
+      if (/api key|GEMINI_API_KEY|missing/i.test(msg)) {
+        throw new Error('Configuração de servidor ausente. Tente novamente mais tarde.');
+      }
+      throw new Error('Erro interno ao processar sua solicitação.');
+    }
+    const msg = typeof parsed?.error === 'string' ? parsed.error : 'Falha ao consultar a IA.';
     throw new Error(msg);
   }
 
-  const heightMm = Number(parsed?.heightMm);
-  const widthMm = Number(parsed?.widthMm);
-  const lengthMm = Number(parsed?.lengthMm);
+  // Adaptar aos nomes esperados pela Function do usuário
+  const heightMm = Number(parsed?.altura_mm ?? parsed?.heightMm);
+  const widthMm = Number(parsed?.largura_mm ?? parsed?.widthMm);
+  const lengthMm = Number(parsed?.comprimento_mm ?? parsed?.lengthMm);
 
   if (!Number.isFinite(heightMm) || !Number.isFinite(widthMm) || !Number.isFinite(lengthMm)) {
     throw new Error('Resposta inválida do servidor. Tente outra imagem.');

@@ -36,6 +36,40 @@ export default function Dashboard() {
     };
   }, []);
 
+  // Ao refazer captura, garantir que a câmera volte a tocar
+  useEffect(() => {
+    if (!capturedDataUrl && stream && videoRef.current) {
+      const v = videoRef.current as HTMLVideoElement;
+      // Reatribuir o stream e tentar tocar novamente
+      if (!v.srcObject) v.srcObject = stream;
+      v.play().catch(() => {});
+    }
+  }, [capturedDataUrl, stream]);
+
+  async function downscaleToMax1280(dataUrl: string): Promise<string> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxSide = 1280;
+        let { width, height } = img;
+        const scale = Math.min(1, maxSide / Math.max(width, height));
+        if (scale < 1) {
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const c = document.createElement('canvas');
+        c.width = width;
+        c.height = height;
+        const cx = c.getContext('2d');
+        if (!cx) return resolve(dataUrl);
+        cx.drawImage(img, 0, 0, width, height);
+        resolve(c.toDataURL('image/jpeg', 0.7));
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    });
+  }
+
   const handleCapture = async () => {
     if (!videoRef.current || !canvasRef.current) return;
     const video = videoRef.current;
@@ -46,7 +80,8 @@ export default function Dashboard() {
     if (!ctx) return;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     // Reduzir qualidade para evitar limites de payload
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+    const rawDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+    const dataUrl = await downscaleToMax1280(rawDataUrl);
     setCapturedDataUrl(dataUrl);
     setIsLoading(true);
     setErrorMsg(null);
@@ -72,7 +107,13 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-teal-50 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         <div className="bg-white rounded-3xl shadow-xl p-6 space-y-6">
-          <div className="flex justify-end">
+          <div className="flex justify-between">
+            <button
+              onClick={() => navigate('/menu')}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-all text-sm"
+            >
+              Menu
+            </button>
             <button
               onClick={() => navigate('/manual')}
               className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-all text-sm"
@@ -136,13 +177,30 @@ export default function Dashboard() {
           </div>
 
           <div className="flex gap-4 pt-2">
-            <button
-              onClick={handleCapture}
-              disabled={isLoading}
-              className="flex-1 px-6 py-3 bg-white hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed text-gray-700 font-semibold rounded-xl transition-all border-2 border-gray-200 hover:border-gray-300"
-            >
-              Capturar
-            </button>
+            {capturedDataUrl ? (
+              <button
+                onClick={() => {
+                  setCapturedDataUrl(null);
+                  setHeightMm(null);
+                  setWidthMm(null);
+                  setLengthMm(null);
+                  setStatusText(null);
+                  setErrorMsg(null);
+                }}
+                disabled={isLoading}
+                className="flex-1 px-6 py-3 bg-white hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed text-gray-700 font-semibold rounded-xl transition-all border-2 border-gray-200 hover:border-gray-300"
+              >
+                Refazer captura
+              </button>
+            ) : (
+              <button
+                onClick={handleCapture}
+                disabled={isLoading}
+                className="flex-1 px-6 py-3 bg-white hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed text-gray-700 font-semibold rounded-xl transition-all border-2 border-gray-200 hover:border-gray-300"
+              >
+                Capturar
+              </button>
+            )}
             <button
               disabled={heightMm == null || widthMm == null || lengthMm == null}
               onClick={() => {

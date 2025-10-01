@@ -6,10 +6,16 @@ export default function Login() {
   const [professionalId, setProfessionalId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!professionalId.trim() || !password.trim()) {
+      setErrorMsg('Preencha ID do Profissional e Senha.');
+      return;
+    }
+    setErrorMsg(null);
     navigate('/menu');
   };
 
@@ -64,6 +70,10 @@ export default function Login() {
                 </button>
               </div>
             </div>
+
+            {errorMsg && (
+              <p className="text-sm text-red-600">{errorMsg}</p>
+            )}
 
             <button
               type="submit"

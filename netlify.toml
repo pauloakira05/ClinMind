@@ -6,4 +6,9 @@
   [headers.values]
     Access-Control-Allow-Origin = "*"
 
+[dev]
+  command = "vite --port 5175 --strictPort"
+  targetPort = 5175
+  port = 5176
+
 

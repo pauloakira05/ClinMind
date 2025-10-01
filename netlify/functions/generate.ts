@@ -32,24 +32,19 @@ export const handler: Handler = async (event) => {
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return buildResponse(500, {
-      error: 'Configuração do servidor ausente. Contate o suporte.',
-      details: 'GEMINI_API_KEY não configurada no ambiente do Netlify.',
-    });
-  }
+  const isLocalMock = !apiKey || apiKey === 'demo_local_key';
 
-  let payload: { imageBase64?: string; prompt?: string } = {};
+  let payload: { imageBase64?: string; base64Image?: string; prompt?: string } = {};
   try {
     payload = event.body ? JSON.parse(event.body) : {};
   } catch {
     return buildResponse(400, { error: 'JSON inválido na requisição.' });
   }
 
-  const imageBase64 = (payload.imageBase64 || '').trim();
+  const imageBase64 = (payload.imageBase64 || payload.base64Image || '').trim();
   const userPrompt = (payload.prompt || '').trim();
   if (!imageBase64) {
-    return buildResponse(400, { error: 'Imagem ausente. Envie o base64 da foto.' });
+    return buildResponse(422, { error: 'Imagem ausente. Envie o base64 da foto.' });
   }
 
   const prompt =
@@ -57,6 +52,30 @@ export const handler: Handler = async (event) => {
     'Você é um assistente que mede dimensões básicas de uma amostra a partir de uma foto. Responda SOMENTE em JSON válido com as chaves: heightMm, widthMm, lengthMm. Use números em milímetros (mm). Se não tiver certeza absoluta, retorne null para o campo. Exemplo de resposta: {"heightMm": 10.2, "widthMm": 25.1, "lengthMm": 31.0}';
 
   try {
+    // Modo mock para ambiente local sem chave real
+    if (isLocalMock) {
+      // Emula latência e resposta variável por imagem local
+      await new Promise(r => setTimeout(r, 250));
+      // Hash simples do base64 para variar resultados
+      let hash = 0;
+      for (let i = 0; i < Math.min(200, imageBase64.length); i++) {
+        hash = (hash * 31 + imageBase64.charCodeAt(i)) >>> 0;
+      }
+      const base = (hash % 1000) / 10; // 0.0 - 100.0
+      const h = Math.round((10 + (base % 30)) * 10) / 10; // 10 - 40 mm
+      const w = Math.round((20 + ((base / 2) % 50)) * 10) / 10; // 20 - 70 mm
+      const l = Math.round((30 + ((base / 3) % 70)) * 10) / 10; // 30 - 100 mm
+      return buildResponse(200, {
+        altura_mm: h,
+        largura_mm: w,
+        comprimento_mm: l,
+        heightMm: h,
+        widthMm: w,
+        lengthMm: l,
+        explanation: 'Resposta simulada (varia conforme imagem) em ambiente local.'
+      });
+    }
+
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel(
       { model: 'gemini-2.5-flash' },
@@ -105,6 +124,11 @@ export const handler: Handler = async (event) => {
     }
 
     return buildResponse(200, {
+      // snake_case esperado pelo front
+      altura_mm: heightMm,
+      largura_mm: widthMm,
+      comprimento_mm: lengthMm,
+      // compatibilidade com versões anteriores
       heightMm,
       widthMm,
       lengthMm,

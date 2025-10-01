@@ -12,17 +12,22 @@ export default function ManualEntry() {
   const [width, setWidth] = useState('');
   const [length, setLength] = useState('');
   const [validation, setValidation] = useState<ValidationStatus>('ok');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSave = () => {
     const toNumber = (v: string) => Number(String(v).replace(',', '.'));
     const heightMm = toNumber(height);
     const widthMm = toNumber(width);
     const lengthMm = toNumber(length);
-    if (!Number.isFinite(heightMm) || !Number.isFinite(widthMm) || !Number.isFinite(lengthMm)) {
-      // eslint-disable-next-line no-alert
-      alert('Preencha valores numéricos válidos para altura, largura e comprimento.');
+    if (!sampleId.trim()) {
+      setErrorMsg('Informe o ID da amostra.');
       return;
     }
+    if (!Number.isFinite(heightMm) || !Number.isFinite(widthMm) || !Number.isFinite(lengthMm)) {
+      setErrorMsg('Preencha valores numéricos válidos para altura, largura e comprimento.');
+      return;
+    }
+    setErrorMsg(null);
     const statusText = computeStatus(heightMm, widthMm, lengthMm);
     setValidation(statusText === 'Padrão OK' ? 'ok' : statusText === 'Atenção' ? 'warning' : 'error');
 
@@ -117,6 +122,9 @@ export default function ManualEntry() {
               />
             </div>
           </div>
+          {errorMsg && (
+            <p className="text-sm text-red-600">{errorMsg}</p>
+          )}
 
           <div className="space-y-3">
             <h2 className="text-lg font-bold text-gray-900">Validação:</h2>
@@ -168,6 +176,7 @@ export default function ManualEntry() {
             </button>
             <button
               onClick={handleSave}
+              disabled={!sampleId.trim() || !height.trim() || !width.trim() || !length.trim()}
               className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl"
             >
               Salvar Medição
