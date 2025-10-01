@@ -15,7 +15,6 @@ export default function Dashboard() {
   const [statusText, setStatusText] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [apiKeyInput, setApiKeyInput] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -46,7 +45,8 @@ export default function Dashboard() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    // Reduzir qualidade para evitar limites de payload
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
     setCapturedDataUrl(dataUrl);
     setIsLoading(true);
     setErrorMsg(null);
@@ -97,32 +97,6 @@ export default function Dashboard() {
           </div>
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-900">Chave do Gemini (armazenada localmente)</label>
-              <div className="flex gap-2">
-                <input
-                  type="password"
-                  value={apiKeyInput}
-                  onChange={(e) => setApiKeyInput(e.target.value)}
-                  placeholder="Cole sua API key aqui"
-                  className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                />
-                <button
-                  onClick={() => {
-                    try {
-                      localStorage.setItem('clinmind.geminiKey', apiKeyInput.trim());
-                      setErrorMsg(null);
-                      // eslint-disable-next-line no-alert
-                      alert('Chave salva localmente. Agora você pode Capturar.');
-                    } catch {}
-                  }}
-                  className="px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white font-semibold rounded-xl"
-                >
-                  Salvar chave
-                </button>
-              </div>
-            </div>
-
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">Resultados:</h2>
               {statusText && (

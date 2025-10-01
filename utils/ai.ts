@@ -1,5 +1,4 @@
 import { computeStatus, StatusText } from './measurements';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export interface AnalysisResult {
   heightMm: number;
@@ -8,70 +7,38 @@ export interface AnalysisResult {
   status: StatusText;
 }
 
-// Placeholder AI analysis. Replace this with a real model integration later.
-function resolveApiKey(): string | null {
-  const fromEnv = (import.meta as any)?.env?.VITE_GEMINI_API_KEY as string | undefined;
-  if (fromEnv && String(fromEnv).trim().length > 0) return fromEnv;
-  try {
-    const fromStorage = localStorage.getItem('clinmind.geminiKey');
-    if (fromStorage && fromStorage.trim().length > 0) return fromStorage.trim();
-  } catch {}
-  return null;
-}
-
 export async function analyzeImageFromDataUrl(dataUrl: string): Promise<AnalysisResult> {
-  const apiKey = resolveApiKey();
-  if (!apiKey) {
-    throw new Error('Chave do Gemini ausente. Informe a chave no aplicativo para continuar.');
-  }
-
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
   // Convert data URL to base64 content only
   const base64 = dataUrl.split(',')[1] || '';
-
   const prompt = `Você é um assistente que mede dimensões básicas de uma amostra a partir de uma foto.
 Responda SOMENTE em JSON válido com as chaves: heightMm, widthMm, lengthMm.
 Use números em milímetros (mm). Se não tiver certeza absoluta, retorne null para o campo.
 Exemplo de resposta: {"heightMm": 10.2, "widthMm": 25.1, "lengthMm": 31.0}`;
 
-  const result = await model.generateContent({
-    generationConfig: {
-      responseMimeType: 'application/json',
-    },
-    contents: [
-      {
-        role: 'user',
-        parts: [
-          { text: prompt },
-          {
-            inlineData: {
-              mimeType: 'image/jpeg',
-              data: base64,
-            },
-          },
-        ],
-      },
-    ],
+  // Chamada ao backend serverless no Netlify
+  const resp = await fetch('/.netlify/functions/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageBase64: base64, prompt }),
   });
 
-  const text = result.response.text().trim();
   let parsed: { heightMm: number | null; widthMm: number | null; lengthMm: number | null } | null = null;
   try {
-    // Extract first JSON object from text
-    const start = text.indexOf('{');
-    const end = text.lastIndexOf('}');
-    const json = start >= 0 && end >= start ? text.slice(start, end + 1) : text;
-    parsed = JSON.parse(json);
-  } catch {}
+    parsed = await resp.json();
+  } catch {
+    throw new Error('Falha ao processar a resposta do servidor.');
+  }
+  if (!resp.ok) {
+    const msg = (parsed as any)?.error || 'Falha ao consultar a IA.';
+    throw new Error(msg);
+  }
 
   const heightMm = Number(parsed?.heightMm);
   const widthMm = Number(parsed?.widthMm);
   const lengthMm = Number(parsed?.lengthMm);
 
   if (!Number.isFinite(heightMm) || !Number.isFinite(widthMm) || !Number.isFinite(lengthMm)) {
-    throw new Error('Resposta inválida do Gemini. Tente outra imagem.');
+    throw new Error('Resposta inválida do servidor. Tente outra imagem.');
   }
 
   const status = computeStatus(heightMm, widthMm, lengthMm);
