@@ -45,7 +45,6 @@ export default function ManualEntry() {
       // eslint-disable-next-line no-alert
       alert(`Medição salva (ID: ${saved.sampleId})`);
     } catch {}
-    navigate('/history');
   };
 
   const handleDiscard = () => {

@@ -210,7 +210,6 @@ export default function Dashboard() {
                   // eslint-disable-next-line no-alert
                   alert(`Medição salva (ID: ${saved.sampleId})`);
                 } catch {}
-                navigate('/history');
               }}
               className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl"
             >
