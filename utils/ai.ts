@@ -20,7 +20,7 @@ Exemplo de resposta: {"heightMm": 10.2, "widthMm": 25.1, "lengthMm": 31.0}`;
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     // Adequar ao contrato esperado pela Function publicada
-    body: JSON.stringify({ base64Image: base64, prompt: 'Calcule altura, largura e comprimento em mm.' }),
+    body: JSON.stringify({ base64Image: base64, prompt}),
   });
 
   let parsed: any = null;
