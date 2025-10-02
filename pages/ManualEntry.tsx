@@ -55,7 +55,7 @@ export default function ManualEntry() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-teal-50 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
-        <div className="bg-white rounded-3xl shadow-xl p-6 space-y-6">
+        <div className="bg-white rounded-3xl shadow-xl px-6 py-5 space-y-6">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/dashboard')}

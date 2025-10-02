@@ -105,8 +105,8 @@ export default function History() {
         <div className="bg-white rounded-3xl shadow-xl p-8 space-y-6">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate('/dashboard')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              onClick={() => navigate('/menu')}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-all text-sm"
             >
               <ArrowLeft className="w-5 h-5 text-gray-700" />
             </button>
