@@ -123,19 +123,13 @@ export default function Dashboard() {
             </button>
           </div>
 
-          <div className="bg-gradient-to-br from-slate-200 to-slate-100 rounded-2xl p-4 aspect-[4/3] relative overflow-hidden">
+          <div className="bg-gradient-to-br from-slate-200 to-slate-100 rounded-2xl p-2 aspect-[4/3] relative overflow-hidden">
             {capturedDataUrl ? (
               <img src={capturedDataUrl} alt="Captura" className="w-full h-full object-cover rounded-xl" />
             ) : (
               <video ref={videoRef} className="w-full h-full object-cover rounded-xl" playsInline muted />
             )}
             <canvas ref={canvasRef} className="hidden" />
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg">
-              <div className="flex items-center gap-2 text-sm text-gray-700">
-                <div className="w-32 h-1 bg-gradient-to-r from-gray-300 via-gray-600 to-gray-300 rounded-full"></div>
-                <span className="font-mono">0-6cm</span>
-              </div>
-            </div>
           </div>
 
           <div className="space-y-4">
